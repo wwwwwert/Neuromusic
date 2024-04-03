@@ -1,0 +1,119 @@
+{
+  "name": "debug_train",
+  "n_gpu": 1,
+  "augmentations": {
+    "midi": [
+      {
+        "type": "ShiftPitch",
+        "args": {}
+      },
+      {
+        "type": "ShiftVelocity",
+        "args": {}
+      }
+    ],
+    "tokens": []
+  },
+  "arch": {
+    "type": "MusicTransformer",
+    "args": {
+      "n_seq": 512,
+      "n_layers": 12,
+      "num_heads": 12,
+      "d_model": 768,
+      "dim_feedforward": 1536,
+      "rpr": true,
+      "dropout": 0.1
+    }
+  },
+  "data": {
+    "train": {
+      "batch_size": 2,
+      "num_workers": 5,
+      "datasets": [
+        {
+          "type": "MaestroDataset",
+          "args": {
+            "part": "train",
+            "audio_length": 10,
+            "n_tokens": 512
+          }
+        }
+      ]
+    },
+    "val": {
+      "batch_size": 2,
+      "num_workers": 5,
+      "datasets": [
+        {
+          "type": "MaestroDataset",
+          "args": {
+            "part": "validation",
+            "audio_length": 10,
+            "n_tokens": 512,
+            "max_items": 7
+          }
+        }
+      ]
+    },
+    "test": {
+      "batch_size": 2,
+      "num_workers": 5,
+      "datasets": [
+        {
+          "type": "MaestroDataset",
+          "args": {
+            "part": "test",
+            "audio_length": 10,
+            "n_tokens": 512,
+            "max_items": 7
+          }
+        }
+      ]
+    }
+  },
+  "midi_encoder": {
+    "type": "REMI_encoder",
+    "args": {}
+  },
+  "optimizer": {
+    "type": "Adam",
+    "args": {
+      "lr": 3e-4
+    }
+  },
+  "loss": {
+    "type": "CELoss",
+    "args": {}
+  },
+  "metrics": [
+    {
+      "type": "ArgmaxAccuracyMetric",
+      "args": {}
+    }
+  ],
+  "gradient_accumulation_steps": 1,
+  "lr_scheduler": {
+    "type": "OneCycleLR",
+    "args": {
+      "steps_per_epoch": 10,
+      "epochs": 5,
+      "anneal_strategy": "cos",
+      "max_lr": 3e-4,
+      "pct_start": 0.2
+    }
+  },
+  "trainer": {
+    "epochs": 5,
+    "save_dir": "saved/",
+    "save_period": 1,
+    "verbosity": 2,
+    "monitor": "min val_loss",
+    "early_stop": 100,
+    "visualize": "wandb",
+    "wandb_project": "junk",
+    "wandb_run_name": "debug_train",
+    "len_epoch": 10,
+    "grad_norm_clip": 10
+  }
+}
