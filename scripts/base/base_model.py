@@ -11,7 +11,7 @@ class BaseModel(nn.Module):
     Base class for all models
     """
 
-    def __init__(self, n_feats, n_class, **batch):
+    def __init__(self, n_class, input_length, **batch):
         super().__init__()
 
     @abstractmethod

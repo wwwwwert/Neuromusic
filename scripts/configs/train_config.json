@@ -8,7 +8,7 @@
   "arch": {
     "type": "MusicTransformer",
     "args": {
-      "n_seq": 1024,
+      "input_length": 1024,
       "n_layers": 12,
       "num_heads": 12,
       "d_model": 768,

@@ -24,8 +24,8 @@ class MusicTransformer(BaseModel):
     def __init__(
         self,
         n_class: int,
+        input_length: int,
         pad_id: int,
-        n_seq: int=2048,
         n_layers: int=6,
         num_heads: int=8,
         d_model: int=512,
@@ -51,7 +51,7 @@ class MusicTransformer(BaseModel):
             rpr (bool): A boolean value indicating whether to use Relative
                 Positional Encoding or not.
         """
-        super().__init__()
+        super().__init__(n_class, input_length)
 
         self.dummy = DummyDecoder()
         self.nlayers = n_layers
@@ -59,7 +59,7 @@ class MusicTransformer(BaseModel):
         self.d_model = d_model
         self.d_ff = dim_feedforward
         self.dropout = dropout
-        self.max_seq = n_seq
+        self.max_seq = input_length
 
         # Input embedding
         self.embedding = nn.Embedding(
