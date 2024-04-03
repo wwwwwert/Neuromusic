@@ -1,0 +1,15 @@
+numpy==1.26.4
+wget==3.2
+midi2audio==0.1.1
+torch==2.2.1
+torchaudio==2.2.1
+pandas==2.2.1
+pretty_midi==0.2.10
+tokenizers==0.15.2
+tqdm==4.64.1
+wandb==0.16.4
+notebook==6.4.12
+gitpython==3.1.42
+miditok==3.0.0
+pypianoroll==1.0.4
+scikit-learn==1.4.1.post1
