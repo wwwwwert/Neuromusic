@@ -1,13 +1,16 @@
 import os
 import random
+import subprocess
+from pathlib import Path
+from typing import Optional
 
 from symusic.core import ScoreTick
 from torchaudio import load
 from torchaudio.functional import resample
-from typing import Optional
-from pathlib import Path
+
 from scripts.utils.download import download
-import subprocess
+from torch import Tensor
+from miditok.midi_tokenizer import MIDITokenizer
 
 
 class Converter:
@@ -34,7 +37,8 @@ class Converter:
             file_name: file to save output
         """
         save_dir = os.path.dirname(file_path)
-        os.makedirs(save_dir, exist_ok=True)
+        if save_dir != '':
+            os.makedirs(save_dir, exist_ok=True)
         self.fs.midi_to_audio(midi_path, file_path)
 
     def midi_to_tensor(

@@ -1,15 +1,15 @@
 import json
 import logging
+import pickle
 import shutil
 
 import pandas as pd
-from scripts.base.base_dataset import BaseDataset
-from scripts.utils import ROOT_PATH, download
-import pickle
-from tqdm import tqdm
-from scripts.utils import train_val_test_split
 from symusic import Score
+from tqdm import tqdm
 
+from scripts.base.base_dataset import BaseDataset
+from scripts.utils import ROOT_PATH, download, train_val_test_split
+from miditok import REMI, TokenizerConfig
 
 logger = logging.getLogger(__name__)
 
@@ -94,12 +94,15 @@ class LAMDataset(BaseDataset):
     def filter_readable_midis(self, data, name_to_path):
         print('Filtering readable midis')
         n_damaged = 0
+        tokenizer = REMI(TokenizerConfig(num_velocities=16, use_chords=True, use_programs=True))
         new_data = []
         for meta in tqdm(data):
             name = meta[0]
             path = name_to_path[name]
             try:
-                if not Score(path).empty():
+                midi = Score(path)
+                tokens = tokenizer(midi)
+                if not Score(path).empty() and len(tokens.ids) > 10:
                     new_data.append(meta)
             except:
                 n_damaged += 1

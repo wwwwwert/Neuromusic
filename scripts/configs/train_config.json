@@ -33,7 +33,7 @@
       ]
     },
     "val": {
-      "batch_size": 2,
+      "batch_size": 3,
       "num_workers": 5,
       "datasets": [
         {
@@ -42,13 +42,13 @@
             "part": "validation",
             "audio_length": 10,
             "n_tokens": 1024,
-            "max_items": 1000
+            "max_items": 200
           }
         }
       ]
     },
     "test": {
-      "batch_size": 2,
+      "batch_size": 3,
       "num_workers": 5,
       "datasets": [
         {
@@ -57,7 +57,7 @@
             "part": "test",
             "audio_length": 10,
             "n_tokens": 1024,
-            "max_items": 1000
+            "max_items": 200
           }
         }
       ]
@@ -83,7 +83,7 @@
       "args": {}
     }
   ],
-  "gradient_accumulation_steps": 20,
+  "gradient_accumulation_steps": 5,
   "lr_scheduler": {
     "type": "OneCycleLR",
     "args": {
@@ -95,14 +95,14 @@
     }
   },
   "trainer": {
-    "epochs": 30,
+    "epochs": 5,
     "save_dir": "saved/",
     "save_period": 1,
     "verbosity": 2,
     "monitor": "min val_loss",
     "early_stop": 100,
     "visualize": "wandb",
-    "wandb_project": "junk",
+    "wandb_project": "diploma",
     "wandb_run_name": "Music Transformer",
     "len_epoch": 4000,
     "grad_norm_clip": 10

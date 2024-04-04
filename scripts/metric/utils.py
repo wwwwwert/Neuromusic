@@ -1,6 +1,6 @@
 from editdistance import eval
-from torch import Tensor
 from sklearn.metrics import accuracy_score
+from torch import Tensor
 
 
 def calc_ter(target_sequence: Tensor, predicted_sequence: Tensor) -> float:

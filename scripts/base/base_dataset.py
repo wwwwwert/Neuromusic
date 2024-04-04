@@ -8,9 +8,8 @@ from symusic import Score, TimeUnit
 from torch import Tensor
 from torch.utils.data import Dataset
 
-from scripts.base.base_midi_encoder import BaseMiDiEncoder
+from miditok.midi_tokenizer import MIDITokenizer
 from scripts.utils.parse_config import ConfigParser
-import random
 
 logger = logging.getLogger(__name__)
 
@@ -19,15 +18,16 @@ class BaseDataset(Dataset):
     def __init__(
             self,
             index,
-            midi_encoder: BaseMiDiEncoder,
+            midi_encoder: MIDITokenizer,
             config_parser: ConfigParser,
             max_items: int=-1,
-            audio_length: int=10,
+            audio_length: int=-1,
             n_tokens: int=1024,
             midi_augs=None,
             tokens_augs=None, 
             max_audio_length=None,
             filter_limit=None,
+            train_bpe=False,
             **kwargs
     ):
         self.midi_encoder = midi_encoder
@@ -36,7 +36,7 @@ class BaseDataset(Dataset):
         self.n_tokens = n_tokens
         self.midi_augs = midi_augs
 
-        if midi_encoder.train_bpe:
+        if train_bpe:
             midi_files = [obj['midi_path'] for obj in index]
             midi_encoder.learn_bpe(midi_files)
         self._assert_index_is_valid(index)
@@ -57,7 +57,7 @@ class BaseDataset(Dataset):
             "midi_path": data_dict['midi_path'],
             "midi": midi,
             "tokens_mask": mask,
-            "sequence_length": mask.sum().item()
+            "sequence_length": mask.sum().item(),
         }
 
     @staticmethod
@@ -75,7 +75,7 @@ class BaseDataset(Dataset):
 
     def load_midi(self, path):
         midi = Score(path, ttype=TimeUnit.second)
-        if midi.end() > self.audio_length:
+        if self.audio_length != -1 and midi.end() > self.audio_length:
             random_position = random.uniform(0, midi.end() - self.audio_length)
             midi = midi.clip(random_position, random_position + self.audio_length)
             midi = midi.shift_time(-random_position)
@@ -88,17 +88,43 @@ class BaseDataset(Dataset):
         return midi
     
     def get_tokens(self, midi):
-        tokens = self.midi_encoder.encode(midi)
+        tokens_list = self.midi_encoder(midi).ids
+        tokens = torch.zeros(len(tokens_list) + 2, dtype=torch.int32)
+        tokens[0] = self.midi_encoder['BOS_None']
+        tokens[-1] = self.midi_encoder['EOS_None']
+        tokens[1:-1] = torch.tensor(tokens_list)
         mask = torch.ones(self.n_tokens, dtype=torch.int32)
         if tokens.shape[0] < self.n_tokens:
             mask[tokens.shape[0]:] = 0
             n_pad = self.n_tokens - tokens.shape[0]
-            tokens = torch.nn.functional.pad(tokens, (0, n_pad), 'constant', value=self.midi_encoder.pad_token_id)
+            tokens = torch.nn.functional.pad(tokens, (0, n_pad), 'constant', value=self.midi_encoder["PAD_None"])
         elif tokens.shape[0] > self.n_tokens:
             random_position = random.randint(0, tokens.shape[0] - self.n_tokens)
             tokens = tokens[random_position:random_position + self.n_tokens]
         return tokens, mask
-
+    
+    def get_tokens_with_prev(self, midi):
+        tokens_list = self.midi_encoder(midi).ids
+        tokens = torch.zeros(len(tokens_list) + 2, dtype=torch.int32)
+        tokens[0] = self.midi_encoder['BOS_None']
+        tokens[-1] = self.midi_encoder['EOS_None']
+        tokens[1:-1] = torch.tensor(tokens_list)
+        if tokens.shape[0] < self.n_tokens * 2:
+            pred_tokens = tokens[:tokens.shape[0] // 2]
+            
+            next_tokens = tokens[tokens.shape[0] // 2:]
+            next_mask = torch.zeros(self.n_tokens, dtype=torch.int32)
+            next_mask[:next_tokens.shape[0]] = 1
+    
+            n_pad = self.n_tokens - next_tokens.shape[0]
+            next_tokens = torch.nn.functional.pad(next_tokens, (0, n_pad), 'constant', value=self.midi_encoder["PAD_None"])
+        else:
+            random_position = random.randint(0, tokens.shape[0] - self.n_tokens * 2)
+            pred_tokens = tokens[random_position:random_position + self.n_tokens]
+            next_tokens = tokens[random_position + self.n_tokens:random_position + self.n_tokens * 2]
+            next_mask = torch.ones(self.n_tokens, dtype=torch.int32)
+        return next_tokens, next_mask, pred_tokens
+    
     @staticmethod
     def _filter_records_from_dataset(
             index: list, max_audio_length, limit

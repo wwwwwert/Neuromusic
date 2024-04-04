@@ -3,9 +3,11 @@ from typing import Optional
 from torch import Tensor, nn
 from torch.nn.modules.normalization import LayerNorm
 
+from scripts.base import BaseModel
+
 from .positional_encoding import PositionalEncoding
 from .rpr import TransformerEncoderLayerRPR, TransformerEncoderRPR
-from scripts.base import BaseModel
+
 
 class MusicTransformer(BaseModel):
     """The implementation of Music Transformer.
@@ -104,7 +106,7 @@ class MusicTransformer(BaseModel):
             dropout=self.dropout,
             dim_feedforward=self.d_ff,
             custom_decoder=self.dummy,
-            custom_encoder=encoder,
+            custom_encoder=encoder
         )
 
         self.Wout = nn.Linear(self.d_model, n_class)
@@ -130,7 +132,7 @@ class MusicTransformer(BaseModel):
             `j+1`-th token of the `i`-th composition from the batch.
         """
         mask = self.transformer.generate_square_subsequent_mask(
-            input_ids.shape[1],
+            input_ids.shape[1]
         ).to(input_ids.device)
         x = self.embedding(input_ids)
 
@@ -140,8 +142,9 @@ class MusicTransformer(BaseModel):
 
         # Since there are no true decoder layers, the tgt is unused
         # Pytorch wants src and tgt to have some equal dims however
-        padding_mask = padding_mask != 1
-        x_out = self.transformer(src=x, tgt=x, src_mask=mask, src_key_padding_mask=padding_mask, tgt_key_padding_mask=padding_mask)
+        padding_mask = (padding_mask != 1)
+        x_out = self.transformer(src=x, tgt=x, src_mask=mask) #, src_key_padding_mask=padding_mask)
+        # masking somehow breaks gradients (nans in gradients)
 
         # Back to (batch_size, max_seq, d_model)
         x_out = x_out.permute(1, 0, 2)

@@ -1,9 +1,10 @@
+from typing import List
+
 import torch
 from torch import Tensor
 
 from scripts.base.base_metric import BaseMetric
 from scripts.metric.utils import calc_accuracy_score
-from typing import List
 
 
 class ArgmaxAccuracyMetric(BaseMetric):

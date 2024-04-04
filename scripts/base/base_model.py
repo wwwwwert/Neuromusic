@@ -12,6 +12,8 @@ class BaseModel(nn.Module):
     """
 
     def __init__(self, n_class, input_length, **batch):
+        self.n_class = n_class
+        self.input_length = input_length
         super().__init__()
 
     @abstractmethod

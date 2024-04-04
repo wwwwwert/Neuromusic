@@ -72,8 +72,16 @@
       ]
     }
   },
-  "midi_encoder": {
-    "type": "REMI_encoder",
+  "tokenizer": {
+    "type": "REMI",
+    "config_args": {
+      "num_velocities": 16, 
+      "use_chords": true, 
+      "use_programs": true, 
+      "remove_duplicated_notes": true, 
+      "delete_equal_successive_tempo_changes": true,
+      "delete_equal_successive_time_sig_changes": true
+    },
     "args": {}
   },
   "optimizer": {

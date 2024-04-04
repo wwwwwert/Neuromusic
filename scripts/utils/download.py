@@ -1,5 +1,7 @@
-from wget import download as wget_download
 from sys import stdout
+
+from wget import download as wget_download
+
 
 def download(url: str, save_path: str):
     wget_download(url, save_path, bar=bar_progress)

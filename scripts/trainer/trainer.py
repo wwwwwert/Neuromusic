@@ -10,10 +10,11 @@ from torch.nn.utils import clip_grad_norm_
 from tqdm import tqdm
 
 from scripts.base import BaseTrainer
+from scripts.converter import Converter
 from scripts.logger.utils import plot_spectrogram_to_buf
 from scripts.metric.utils import calc_ter
 from scripts.utils import MetricTracker, inf_loop
-from scripts.converter import Converter 
+
 
 class Trainer(BaseTrainer):
     """
@@ -64,7 +65,7 @@ class Trainer(BaseTrainer):
         """
         Move all necessary tensors to the GPU
         """
-        for tensor_for_gpu in ["input_ids", "padding_mask"]:
+        for tensor_for_gpu in ["input_ids", "padding_mask", "target_ids"]:
             batch[tensor_for_gpu] = batch[tensor_for_gpu].to(device)
         return batch
 
@@ -85,6 +86,7 @@ class Trainer(BaseTrainer):
         self.train_metrics.reset()
         self.writer.add_scalar("epoch", epoch)
         progress = tqdm(self.train_dataloader, desc="train", total=self.len_epoch)
+        gns = []
         for batch_idx, batch in enumerate(progress, 1):
             try:
                 batch = self.process_batch(
@@ -107,8 +109,9 @@ class Trainer(BaseTrainer):
             if batch_idx >= self.len_epoch:
                 progress.update()
                 progress.close()
-            if batch_idx % 500 == 0 or batch_idx >= self.len_epoch:
-                self.writer.set_step((epoch - 1) * self.len_epoch + batch_idx)
+            step_idx = (epoch - 1) * self.len_epoch + batch_idx
+            if batch_idx % 500 == 0 or batch_idx >= self.len_epoch or step_idx == 1:
+                self.writer.set_step(step_idx)
                 self.logger.debug(
                     "Train Epoch: {} {} Loss: {:.6f}".format(
                         epoch, self._progress(batch_idx), batch["loss"].item()
@@ -148,7 +151,9 @@ class Trainer(BaseTrainer):
             batch["logits"] = outputs
 
         batch["loss"] = self.criterion(**batch) / self.accum_steps
-
+        if (batch['loss'] != batch['loss']).sum().item():
+            print(batch)
+            raise ValueError('Loss is nan.')
         if is_train:
             batch["loss"].backward()
             if batch_idx % self.accum_steps == 0 or batch_idx == self.len_epoch:

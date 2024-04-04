@@ -1,7 +1,7 @@
 import logging
 from typing import List
 
-from torch import int32, zeros, long
+from torch import int32, long, zeros
 
 logger = logging.getLogger(__name__)
 
@@ -42,6 +42,7 @@ def collate_fn(dataset_items: List[dict]):
 
     return {
         "input_ids": tokens,
+        "target_ids": tokens.cpu().detach().clone(),
         "midi_path": midi_path,
         "midi": midi,
         "padding_mask": tokens_mask,

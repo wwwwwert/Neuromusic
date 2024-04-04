@@ -7,11 +7,11 @@ from functools import partial, reduce
 from operator import getitem
 from pathlib import Path
 
-from scripts import midi_encoder as midi_encoder_module
-from scripts.base.base_midi_encoder import BaseMiDiEncoder
 from scripts.logger import setup_logging
-from scripts.midi_encoder import REMI_encoder
+import miditok
+from miditok import REMI, TokenizerConfig
 from scripts.utils import ROOT_PATH, read_json, write_json
+from miditok.midi_tokenizer import MIDITokenizer
 
 
 class ConfigParser:
@@ -139,13 +139,25 @@ class ConfigParser:
         logger.setLevel(self.log_levels[verbosity])
         return logger
 
-    def get_midi_encoder(self) -> BaseMiDiEncoder:
+    def get_midi_encoder(self) -> MIDITokenizer:
         if self._midi_encoder is None:
-            if "midi_encoder" not in self._config:
-                self._midi_encoder = REMI_encoder()
+            if "tokenizer" not in self._config:
+                config = TokenizerConfig(
+                    num_velocities=16, 
+                    use_chords=True, 
+                    use_programs=True, 
+                    remove_duplicated_notes=True, 
+                    delete_equal_successive_tempo_changes=True,
+                    delete_equal_successive_time_sig_changes=True
+                )
+                self._midi_encoder = REMI(config)
             else:
-                self._midi_encoder = self.init_obj(self["midi_encoder"],
-                                                   default_module=midi_encoder_module)
+                config = TokenizerConfig(**self['tokenizer']['config_args'])
+                self._midi_encoder = self.init_obj(
+                    self["tokenizer"],
+                    miditok,
+                    tokenizer_config=config
+                )
         return self._midi_encoder
 
     # setting read-only attributes

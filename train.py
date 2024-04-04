@@ -39,7 +39,7 @@ def main(config):
         config["arch"], 
         module_arch, 
         n_class=len(midi_encoder), 
-        pad_id=midi_encoder.pad_token_id
+        pad_id=midi_encoder["PAD_None"]
     )
     logger.info(model)
 
@@ -54,7 +54,7 @@ def main(config):
     loss_module = config.init_obj(
         config["loss"], 
         module_loss, 
-        ignore_index=midi_encoder.pad_token_id
+        ignore_index=midi_encoder["PAD_None"]
     ).to(device)
     metrics = [
         config.init_obj(metric_dict, module_metric)

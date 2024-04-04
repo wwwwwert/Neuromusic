@@ -1,3 +1,4 @@
+import logging
 from operator import xor
 
 from torch.utils.data import ConcatDataset, DataLoader
@@ -5,15 +6,14 @@ from torch.utils.data import ConcatDataset, DataLoader
 import scripts.augmentations
 import scripts.datasets
 from scripts import batch_sampler as batch_sampler_module
-from scripts.base.base_midi_encoder import BaseMiDiEncoder
+from miditok.midi_tokenizer import MIDITokenizer
 from scripts.collate_fn.collate import collate_fn
 from scripts.utils.parse_config import ConfigParser
-import logging
 
 logger = logging.getLogger(__name__)
 
 
-def get_dataloaders(configs: ConfigParser, midi_encoder: BaseMiDiEncoder):
+def get_dataloaders(configs: ConfigParser, midi_encoder: MIDITokenizer):
     dataloaders = {}
     for split, params in configs["data"].items():
         num_workers = params.get("num_workers", 1)

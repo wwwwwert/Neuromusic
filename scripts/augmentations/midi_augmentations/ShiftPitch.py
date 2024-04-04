@@ -1,6 +1,9 @@
-from scripts.augmentations.base import AugmentationBase
-from symusic.core import ScoreTick
 from random import randint, random
+
+from symusic.core import ScoreTick
+
+from scripts.augmentations.base import AugmentationBase
+
 
 class ShiftPitch(AugmentationBase):
     def __init__(self, proba: float=0.1):
