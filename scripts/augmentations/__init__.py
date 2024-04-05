@@ -1,4 +1,4 @@
-from collections import Callable
+from typing import Callable
 from typing import List
 
 import scripts.augmentations.midi_augmentations
