@@ -4,12 +4,12 @@ import pickle
 import shutil
 
 import pandas as pd
+from miditok import REMI, TokenizerConfig
 from symusic import Score
 from tqdm import tqdm
 
 from scripts.base.base_dataset import BaseDataset
 from scripts.utils import ROOT_PATH, download, train_val_test_split
-from miditok import REMI, TokenizerConfig
 
 logger = logging.getLogger(__name__)
 

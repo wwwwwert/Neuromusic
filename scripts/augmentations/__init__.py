@@ -1,5 +1,4 @@
-from typing import Callable
-from typing import List
+from typing import Callable, List
 
 import scripts.augmentations.midi_augmentations
 import scripts.augmentations.tokens_augmentations

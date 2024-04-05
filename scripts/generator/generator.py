@@ -1,10 +1,13 @@
-from scripts.base import BaseModel
-from miditok.midi_tokenizer import MIDITokenizer
+from typing import Dict, Optional
+
 import torch
-from typing import Optional, Dict
-from torch import Tensor
-from torch import device
+from miditok.midi_tokenizer import MIDITokenizer
+from torch import Tensor, device
+from tqdm import tqdm
+
+from scripts.base import BaseModel
 from scripts.trainer import Trainer
+
 
 class Generator:
     def __init__(self, model: BaseModel, tokenizer: MIDITokenizer, device: device, sample=True) -> None:
@@ -20,7 +23,7 @@ class Generator:
         if seq[-1].item() == self.tokenizer['EOS_None']:
             seq = seq[:-1]
 
-        is_training = self.model.training()
+        is_training = self.model.training
         self.model = self.model.to(self.device)
         self.model.eval()
         with torch.no_grad():
@@ -41,29 +44,33 @@ class Generator:
         else:
             prompt_seq = prompt_seq[:input_length]
             tokens = torch.zeros(n_tokens + prompt_seq.shape[0], dtype=torch.long)
-            tokens[prompt_seq.shape[0]] = prompt_seq
+            tokens[:] = self.tokenizer['PAD_None']
+            tokens[:prompt_seq.shape[0]] = prompt_seq
             token_idx = prompt_seq.shape[0]
+            # print('prompt', prompt_seq.shape)
+            # print('tokens', tokens.shape)
         mask = torch.zeros(tokens.shape[0])
         mask[:token_idx] = 1
         
-        for i in range(n_tokens):
-            start_idx = min(0, token_idx - input_length)
+        for i in tqdm(range(n_tokens)):
+            start_idx = max(0, token_idx - input_length)
             batch = {
                 'input_ids': tokens[start_idx:token_idx].unsqueeze(0),
+                'target_ids': tokens[start_idx:token_idx].clone().detach().unsqueeze(0),
                 'padding_mask': mask[start_idx:token_idx].unsqueeze(0)
             }
             Trainer.move_batch_to_device(batch, self.device)
-            new_token = self.pred_next_token(batch, token_idx)
+            new_token = self.pred_next_token(batch)
             tokens[token_idx] = new_token
             mask[token_idx] = 1
             token_idx += 1
             if new_token == self.tokenizer['EOS_None']:
                 break
 
-        return tokens[prompt_seq.shape[0]:]
+        return tokens[prompt_seq.shape[0]:token_idx]
 
-    def pred_next_token(self, batch: Dict, token_idx: int):
-        logits = self.model(batch)['logits'][:, token_idx, :]
+    def pred_next_token(self, batch: Dict):
+        logits = self.model(**batch)['logits'][:, -1, :]
         if self.sample:
             distribution = torch.distributions.categorical.Categorical(
                 logits=logits

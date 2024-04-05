@@ -7,16 +7,17 @@ import torch
 from tqdm import tqdm
 
 import scripts.model as module_model
+from scripts.converter import Converter
+from scripts.generator import Generator
 from scripts.trainer import Trainer
 from scripts.utils import ROOT_PATH
 from scripts.utils.object_loading import get_dataloaders
 from scripts.utils.parse_config import ConfigParser
-from scripts.generator import Generator
 
 DEFAULT_CHECKPOINT_PATH = ROOT_PATH / "default_test_model" / "checkpoint.pth"
 
 
-def main(config, out_file):
+def main(config, out_path):
     logger = config.get_logger("test")
 
     # define cpu or gpu if possible
@@ -29,7 +30,12 @@ def main(config, out_file):
     dataloaders = get_dataloaders(config, midi_encoder)
 
     # build model architecture
-    model = config.init_obj(config["arch"], module_model, n_class=len(midi_encoder))
+    model = config.init_obj(
+        config["arch"], 
+        module_model, 
+        n_class=len(midi_encoder), 
+        pad_id=midi_encoder["PAD_None"]
+    )
     logger.info(model)
 
     logger.info("Loading checkpoint: {} ...".format(config.resume))
@@ -44,45 +50,26 @@ def main(config, out_file):
     model.eval()
 
     results = []
-    generator = Generator(model, midi_encoder)
+    generator = Generator(model, midi_encoder, device=device)
+    output_dir = Path(out_path)
+    converter = Converter()
+    tokenizer = config.get_midi_encoder()
 
     with torch.no_grad():
         for batch_idx, batch in enumerate(tqdm(dataloaders["test"])):
             batch = Trainer.move_batch_to_device(batch, device)
-            for item_idx in batch.shape[0]:
-                prev_tokens = batch['pred_tokens'][item_idx]
-                tokens = batch['tokens'][item_idx]
+            for item_idx in range(batch['input_ids'].shape[0]):
+                tokens = batch['input_ids'][item_idx]
+                midi_path = batch['midi_path'][item_idx]
                 sequence_length = batch['sequence_length'][item_idx]
-                continued = generator.continue_seq(prev_tokens, n_tokens=sequence_length)
-            ...
-            output = model(**batch)
-            if type(output) is dict:
-                batch.update(output)
-            else:
-                batch["logits"] = output
-            batch["log_probs"] = torch.log_softmax(batch["logits"], dim=-1)
-            batch["log_probs_length"] = model.transform_input_lengths(
-                batch["spectrogram_length"]
-            )
-            batch["probs"] = batch["log_probs"].exp().cpu()
-            batch["argmax"] = batch["probs"].argmax(-1)
-            for i in range(len(batch["text"])):
-                argmax = batch["argmax"][i]
-                argmax = argmax[: int(batch["log_probs_length"][i])]
-                results.append(
-                    {
-                        "ground_truth": batch["text"][i],
-                        "pred_text_argmax": text_encoder.ctc_decode(argmax.cpu().numpy()),
-                        # "pred_text_beam_search": text_encoder.ctc_beam_search(
-                        #     batch["probs"][i], batch["log_probs_length"][i], beam_size=100
-                        # )[0].text,
-                        "pred_text_beam_search_lm": text_encoder.ctc_lm_beam_search(
-                            batch["probs"][[i]], batch["log_probs_length"][[i]]
-                        ),
-                    }
-                )
-    with Path(out_file).open("w") as f:
-        json.dump(results, f, indent=2)
+                continued = generator.continue_seq(5, tokens)
+                
+                name = Path(midi_path).stem
+                item_path = output_dir / name
+                os.makedirs(item_path, exist_ok=True)
+                
+                converter.score_to_audio(tokenizer(tokens.cpu().detach().numpy()), str(item_path / 'original.wav'))
+                converter.score_to_audio(tokenizer(continued.cpu().detach().numpy()), str(item_path / 'continued.wav'))
 
 
 if __name__ == "__main__":

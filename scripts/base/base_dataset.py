@@ -4,11 +4,11 @@ from typing import List
 
 import numpy as np
 import torch
+from miditok.midi_tokenizer import MIDITokenizer
 from symusic import Score, TimeUnit
 from torch import Tensor
 from torch.utils.data import Dataset
 
-from miditok.midi_tokenizer import MIDITokenizer
 from scripts.utils.parse_config import ConfigParser
 
 logger = logging.getLogger(__name__)
@@ -52,12 +52,18 @@ class BaseDataset(Dataset):
         data_dict = self._index[ind]
         midi = self.load_midi(data_dict['midi_path'])
         tokens, mask = self.get_tokens(midi)
+        input_ids = tokens[:-1]
+        input_mask = mask[:-1]
+        target_ids = tokens[1:]
+        target_mask = mask[1:]
         return {
-            "tokens": tokens,
+            "input_ids": input_ids,
+            "input_mask": input_mask,
+            "target_ids": target_ids,
+            "target_mask": target_mask,
             "midi_path": data_dict['midi_path'],
             "midi": midi,
-            "tokens_mask": mask,
-            "sequence_length": mask.sum().item(),
+            "sequence_length": input_mask.sum().item(),
         }
 
     @staticmethod
@@ -88,19 +94,20 @@ class BaseDataset(Dataset):
         return midi
     
     def get_tokens(self, midi):
+        length = self.n_tokens + 1
         tokens_list = self.midi_encoder(midi).ids
         tokens = torch.zeros(len(tokens_list) + 2, dtype=torch.int32)
         tokens[0] = self.midi_encoder['BOS_None']
         tokens[-1] = self.midi_encoder['EOS_None']
         tokens[1:-1] = torch.tensor(tokens_list)
-        mask = torch.ones(self.n_tokens, dtype=torch.int32)
-        if tokens.shape[0] < self.n_tokens:
+        mask = torch.ones(length, dtype=torch.int32)
+        if tokens.shape[0] < length:
             mask[tokens.shape[0]:] = 0
-            n_pad = self.n_tokens - tokens.shape[0]
+            n_pad = length - tokens.shape[0]
             tokens = torch.nn.functional.pad(tokens, (0, n_pad), 'constant', value=self.midi_encoder["PAD_None"])
-        elif tokens.shape[0] > self.n_tokens:
-            random_position = random.randint(0, tokens.shape[0] - self.n_tokens)
-            tokens = tokens[random_position:random_position + self.n_tokens]
+        elif tokens.shape[0] > length:
+            random_position = random.randint(0, tokens.shape[0] - length)
+            tokens = tokens[random_position:random_position + length]
         return tokens, mask
     
     def get_tokens_with_prev(self, midi):

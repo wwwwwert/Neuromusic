@@ -4,13 +4,13 @@ import subprocess
 from pathlib import Path
 from typing import Optional
 
+from miditok.midi_tokenizer import MIDITokenizer
 from symusic.core import ScoreTick
+from torch import Tensor
 from torchaudio import load
 from torchaudio.functional import resample
 
 from scripts.utils.download import download
-from torch import Tensor
-from miditok.midi_tokenizer import MIDITokenizer
 
 
 class Converter:

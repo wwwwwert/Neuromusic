@@ -1,12 +1,12 @@
 import logging
 from operator import xor
 
+from miditok.midi_tokenizer import MIDITokenizer
 from torch.utils.data import ConcatDataset, DataLoader
 
 import scripts.augmentations
 import scripts.datasets
 from scripts import batch_sampler as batch_sampler_module
-from miditok.midi_tokenizer import MIDITokenizer
 from scripts.collate_fn.collate import collate_fn
 from scripts.utils.parse_config import ConfigParser
 

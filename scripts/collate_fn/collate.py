@@ -11,14 +11,25 @@ def collate_fn(dataset_items: List[dict]):
     Collate fields in dataset items
     """
 
-    n_tokens = dataset_items[0]['tokens'].shape[0]
-    tokens = zeros(
+    n_tokens = dataset_items[0]['input_ids'].shape[0]
+    input_ids = zeros(
+        len(dataset_items), 
+        n_tokens,
+        dtype=long
+    )
+    target_ids = zeros(
         len(dataset_items), 
         n_tokens,
         dtype=long
     )
 
-    tokens_mask = zeros(
+    input_mask = zeros(
+        len(dataset_items), 
+        n_tokens,
+        dtype=int32
+    )
+
+    target_mask = zeros(
         len(dataset_items), 
         n_tokens,
         dtype=int32
@@ -27,25 +38,28 @@ def collate_fn(dataset_items: List[dict]):
     midi_path = []
     midi = []
     sequence_length = []
-    target_sequences = []
 
     for idx, item in enumerate(dataset_items):
-        item_tokens = item['tokens']
-        item_mask = item['tokens_mask']
+        item_input_ids = item['input_ids']
+        item_input_mask = item['input_mask']
+        item_target_ids = item['target_ids']
+        item_target_mask = item['target_mask']
 
-        tokens[idx, :] = item_tokens
-        tokens_mask[idx, :] = item_mask
+        input_ids[idx, :] = item_input_ids
+        input_mask[idx, :] = item_input_mask
+        target_ids[idx, :] = item_target_ids
+        target_mask[idx, :] = item_target_mask
+
         midi_path.append(item['midi_path'])
         midi.append(item['midi'])
         sequence_length.append(item['sequence_length'])
-        target_sequences.append(item_tokens[:item['sequence_length']].cpu().clone().detach())
 
     return {
-        "input_ids": tokens,
-        "target_ids": tokens.cpu().detach().clone(),
+        "input_ids": input_ids,
+        "target_ids": target_ids,
+        "input_mask": input_mask,
+        "target_mask": target_mask,
         "midi_path": midi_path,
         "midi": midi,
-        "padding_mask": tokens_mask,
         "sequence_length": sequence_length,
-        "target_sequences": target_sequences
     }

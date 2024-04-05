@@ -65,7 +65,7 @@ class Trainer(BaseTrainer):
         """
         Move all necessary tensors to the GPU
         """
-        for tensor_for_gpu in ["input_ids", "padding_mask", "target_ids"]:
+        for tensor_for_gpu in ["input_ids", "input_mask", "target_ids", "target_mask"]:
             batch[tensor_for_gpu] = batch[tensor_for_gpu].to(device)
         return batch
 
@@ -207,9 +207,10 @@ class Trainer(BaseTrainer):
     def _log_predictions(
             self,
             input_ids,
+            target_ids,
+            sequence_length,
             midi_path,
             midi,
-            padding_mask,
             logits,
             examples_to_log=5,
             *args,
@@ -217,16 +218,16 @@ class Trainer(BaseTrainer):
     ):
         if self.writer is None:
             return
-        
-        tuples = list(zip(midi, midi_path, padding_mask))
+        input_ids = input_ids.cpu().detach().clone()
+        target_ids = target_ids.cpu().detach().clone()
+        tuples = list(zip(input_ids, sequence_length))
         shuffle(tuples)
         rows = []
-        for midi, midi_path, padding_mask in tuples[:examples_to_log]:
-            target_audio = self.converter.score_to_tensor(midi)
-            n_tokens = padding_mask.sum()
+        for tokens, length in tuples[:examples_to_log]:
+            target_audio = self.converter.score_to_tensor(self.midi_encoder(tokens[:length]))
             rows.append([
                 self.writer.wandb.Audio(target_audio, sample_rate=16000),
-                n_tokens
+                length
             ])
         table = pd.DataFrame(rows, columns=['target audio', 'sequence length'])
         self.writer.add_table("predictions", table)

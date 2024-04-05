@@ -13,3 +13,5 @@ gitpython==3.1.42
 miditok==3.0.0
 pypianoroll==1.0.4
 scikit-learn==1.4.1.post1
+seaborn=0.13.2
+editdistance==0.8.1

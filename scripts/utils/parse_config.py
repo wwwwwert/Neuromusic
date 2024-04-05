@@ -7,11 +7,12 @@ from functools import partial, reduce
 from operator import getitem
 from pathlib import Path
 
-from scripts.logger import setup_logging
 import miditok
 from miditok import REMI, TokenizerConfig
-from scripts.utils import ROOT_PATH, read_json, write_json
 from miditok.midi_tokenizer import MIDITokenizer
+
+from scripts.logger import setup_logging
+from scripts.utils import ROOT_PATH, read_json, write_json
 
 
 class ConfigParser:

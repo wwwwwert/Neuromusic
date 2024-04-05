@@ -8,13 +8,14 @@ from scripts.metric.utils import calc_accuracy_score
 
 
 class ArgmaxAccuracyMetric(BaseMetric):
-    def __call__(self, logits: Tensor, sequence_length: List, target_sequences: List, **kwargs):
+    def __call__(self, logits: Tensor, target_ids: Tensor, sequence_length: List, **kwargs):
         predictions = torch.argmax(logits.cpu(), dim=-1).numpy()
+        target_ids = target_ids.cpu().detach().clone()
         accuracies = []
-        for pred, length, target_sequence in zip(predictions, sequence_length, target_sequences):
+        for pred, length, target in zip(predictions, sequence_length, target_ids):
             if length == 0:
                 continue
             pred = pred[:length]
-            target_sequences = target_sequences[:length]
-            accuracies.append(calc_accuracy_score(target_sequence, pred))
+            target = target[:length]
+            accuracies.append(calc_accuracy_score(target, pred))
         return sum(accuracies) / len(accuracies)
