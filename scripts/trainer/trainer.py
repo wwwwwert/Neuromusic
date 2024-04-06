@@ -143,7 +143,7 @@ class Trainer(BaseTrainer):
     def process_batch(self, batch, is_train: bool, metrics: MetricTracker, batch_idx: int=1):
         batch = self.move_batch_to_device(batch, self.device)
         if is_train:
-            if batch_idx % self.accum_steps == 1 or batch_idx == 1:
+            if batch_idx % self.accum_steps == 1 or batch_idx == 1 or self.accum_steps == 1:
                 self.optimizer.zero_grad()
         outputs = self.model(**batch)
         if type(outputs) is dict:

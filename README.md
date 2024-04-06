@@ -36,6 +36,25 @@ To run train with _Los Angeles MIDI Dataset_:
 python -m train -c scripts/configs/train_config.json
 ```
 
+To run test inference with Logical Access eval dataset:
+```
+python test.py \
+   -c scripts/configs/test_LAMD.json \
+   -r best_model/model_best.pth \
+   -o test_results_LAMD \
+   -b 1
+```
+
+To test model on a custom dataset you need to put MIDI files in some directory.
+To run test with custom dataset in _custom_dataset_ directory:
+```
+python test.py \
+   -c scripts/configs/test_custom.json \
+   -r best_model/model_best.pth \
+   -o test_results_custom \
+   -b 1 \
+   -t custom_dataset/
+```
 
 ## Author
 Dmitrii Uspenskii HSE AMI 4th year.

@@ -33,7 +33,7 @@ def get_dataloaders(configs: ConfigParser, midi_encoder: MIDITokenizer):
                 ds, scripts.datasets, midi_encoder=midi_encoder, config_parser=configs,
                 midi_augs=midi_augs, tokens_augs=tokens_augs))
             ds_name = ds['type']
-            ds_part = ds['args']['part']
+            ds_part = ds['args']['part'] if 'part' in ds['args'] else ''
             logger.info(f'{ds_name} {ds_part} contains {len(datasets[-1])} items')
 
         assert len(datasets)

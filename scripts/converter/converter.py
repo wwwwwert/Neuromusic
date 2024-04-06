@@ -14,7 +14,12 @@ from scripts.utils.download import download
 
 
 class Converter:
-    def __init__(self, soundfont: Optional[str]=None, sample_rate: int=16000) -> None:
+    def __init__(
+        self, 
+        soundfont: Optional[str]=None, 
+        sample_rate: int=16000, 
+        tokenizer: Optional[MIDITokenizer]=None
+    ) -> None:
         if soundfont is None:
             soundfont = 'scripts/converter/Touhou.sf2'
             if not Path(soundfont).exists():
@@ -24,6 +29,7 @@ class Converter:
                 )
 
         self.fs = FluidSynth(sound_font=soundfont, sample_rate=sample_rate)
+        self.tokenizer = tokenizer
 
     def midi_to_audio(
         self,

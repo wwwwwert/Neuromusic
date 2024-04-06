@@ -1,5 +1,5 @@
 {
-  "name": "Music Transformer",
+  "name": "Music_Transformer",
   "n_gpu": 1,
   "augmentations": {
     "midi": [],
@@ -73,10 +73,6 @@
       "delete_equal_successive_tempo_changes": true,
       "delete_equal_successive_time_sig_changes": true
     },
-    "args": {}
-  },
-  "midi_encoder": {
-    "type": "REMI_encoder",
     "args": {}
   },
   "optimizer": {

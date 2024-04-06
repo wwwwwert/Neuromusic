@@ -47,8 +47,6 @@ class Generator:
             tokens[:] = self.tokenizer['PAD_None']
             tokens[:prompt_seq.shape[0]] = prompt_seq
             token_idx = prompt_seq.shape[0]
-            # print('prompt', prompt_seq.shape)
-            # print('tokens', tokens.shape)
         mask = torch.zeros(tokens.shape[0])
         mask[:token_idx] = 1
         

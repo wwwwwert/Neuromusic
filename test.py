@@ -13,6 +13,7 @@ from scripts.trainer import Trainer
 from scripts.utils import ROOT_PATH
 from scripts.utils.object_loading import get_dataloaders
 from scripts.utils.parse_config import ConfigParser
+from miditok.midi_tokenizer import MIDITokenizer
 
 DEFAULT_CHECKPOINT_PATH = ROOT_PATH / "default_test_model" / "checkpoint.pth"
 
@@ -59,17 +60,37 @@ def main(config, out_path):
         for batch_idx, batch in enumerate(tqdm(dataloaders["test"])):
             batch = Trainer.move_batch_to_device(batch, device)
             for item_idx in range(batch['input_ids'].shape[0]):
-                tokens = batch['input_ids'][item_idx]
                 midi_path = batch['midi_path'][item_idx]
                 sequence_length = batch['sequence_length'][item_idx]
-                continued = generator.continue_seq(2048, tokens[:sequence_length])
+                
+                prompt = batch['input_ids'][item_idx][:sequence_length // 2].cpu().detach()
+                generated = generator.continue_seq(2048, prompt).cpu().detach()
+                original = batch['input_ids'][item_idx][:sequence_length].cpu().detach()
+                continued_original = torch.cat([prompt, generated], dim=-1).cpu().detach()
                 
                 name = Path(midi_path).stem
                 item_path = output_dir / name
-                os.makedirs(item_path, exist_ok=True)
+                item_audio_path = item_path / 'audio'
+                item_midi_path = item_path / 'midi'
+                os.makedirs(item_audio_path, exist_ok=True)
+                os.makedirs(item_midi_path, exist_ok=True)
                 
-                converter.score_to_audio(tokenizer(tokens.cpu().detach().numpy()), str(item_path / 'original.wav'))
-                converter.score_to_audio(tokenizer(continued.cpu().detach().numpy()), str(item_path / 'continued.wav'))
+                converter.score_to_audio(tokenizer(prompt), str(item_audio_path / 'prompt.wav'))
+                converter.score_to_audio(tokenizer(generated), str(item_audio_path / 'generated.wav'))
+                converter.score_to_audio(tokenizer(original), str(item_audio_path / 'original.wav'))
+                converter.score_to_audio(tokenizer(continued_original), str(item_audio_path / 'continued_original.wav'))
+
+                tokenizer(prompt).dump_midi(str(item_midi_path / 'prompt.midi'))
+                tokenizer(generated).dump_midi(str(item_midi_path / 'generated.midi'))
+                tokenizer(original).dump_midi(str(item_midi_path / 'original.midi'))
+                tokenizer(continued_original).dump_midi(str(item_midi_path / 'continued_original.midi'))
+
+
+def save_tokens(tokens: torch.Tensor, dir: Path, name: str, tokenizer: MIDITokenizer, converter: Converter):
+    score = tokenizer(tokens)
+    midi_path = dir / 'midi' / 'name.midi'
+    converter.score_to_audio()
+
 
 
 if __name__ == "__main__":
@@ -153,10 +174,7 @@ if __name__ == "__main__":
                     {
                         "type": "CustomDirAudioDataset",
                         "args": {
-                            "audio_dir": str(test_data_folder / "audio"),
-                            "transcription_dir": str(
-                                test_data_folder / "transcriptions"
-                            ),
+                            "audio_dir": str(test_data_folder)
                         },
                     }
                 ],
