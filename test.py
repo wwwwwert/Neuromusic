@@ -50,7 +50,7 @@ def main(config, out_path):
     model.eval()
 
     results = []
-    generator = Generator(model, midi_encoder, device=device)
+    generator = Generator(model, midi_encoder, device=device, sample=True)
     output_dir = Path(out_path)
     converter = Converter()
     tokenizer = config.get_midi_encoder()
@@ -62,7 +62,7 @@ def main(config, out_path):
                 tokens = batch['input_ids'][item_idx]
                 midi_path = batch['midi_path'][item_idx]
                 sequence_length = batch['sequence_length'][item_idx]
-                continued = generator.continue_seq(5, tokens)
+                continued = generator.continue_seq(2048, tokens[:sequence_length])
                 
                 name = Path(midi_path).stem
                 item_path = output_dir / name

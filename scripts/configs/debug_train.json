@@ -98,6 +98,10 @@
     {
       "type": "ArgmaxAccuracyMetric",
       "args": {}
+    },
+    {
+      "type": "MeanLengthMetric",
+      "args": {}
     }
   ],
   "gradient_accumulation_steps": 1,

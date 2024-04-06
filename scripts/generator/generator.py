@@ -56,8 +56,9 @@ class Generator:
             start_idx = max(0, token_idx - input_length)
             batch = {
                 'input_ids': tokens[start_idx:token_idx].unsqueeze(0),
-                'target_ids': tokens[start_idx:token_idx].clone().detach().unsqueeze(0),
-                'padding_mask': mask[start_idx:token_idx].unsqueeze(0)
+                'target_ids': tokens[start_idx + 1:token_idx + 1].clone().detach().unsqueeze(0),
+                'input_mask': mask[start_idx:token_idx].unsqueeze(0),
+                'target_mask': mask[start_idx + 1:token_idx + 1].unsqueeze(0)
             }
             Trainer.move_batch_to_device(batch, self.device)
             new_token = self.pred_next_token(batch)

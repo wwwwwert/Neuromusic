@@ -143,7 +143,8 @@ class Trainer(BaseTrainer):
     def process_batch(self, batch, is_train: bool, metrics: MetricTracker, batch_idx: int=1):
         batch = self.move_batch_to_device(batch, self.device)
         if is_train:
-            self.optimizer.zero_grad()
+            if batch_idx % self.accum_steps == 1 or batch_idx == 1:
+                self.optimizer.zero_grad()
         outputs = self.model(**batch)
         if type(outputs) is dict:
             batch.update(outputs)
@@ -151,9 +152,7 @@ class Trainer(BaseTrainer):
             batch["logits"] = outputs
 
         batch["loss"] = self.criterion(**batch) / self.accum_steps
-        if (batch['loss'] != batch['loss']).sum().item():
-            print(batch)
-            raise ValueError('Loss is nan.')
+
         if is_train:
             batch["loss"].backward()
             if batch_idx % self.accum_steps == 0 or batch_idx == self.len_epoch:
