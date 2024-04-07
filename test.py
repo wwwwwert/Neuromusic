@@ -69,7 +69,7 @@ def main(config, out_path):
                 continued_original = torch.cat([prompt, generated], dim=-1).cpu().detach()
                 
                 name = Path(midi_path).stem
-                item_path = output_dir / name
+                item_path = output_dir / 'compositions' / name
                 item_audio_path = item_path / 'audio'
                 item_midi_path = item_path / 'midi'
                 os.makedirs(item_audio_path, exist_ok=True)
@@ -84,6 +84,16 @@ def main(config, out_path):
                 tokenizer(generated).dump_midi(str(item_midi_path / 'generated.midi'))
                 tokenizer(original).dump_midi(str(item_midi_path / 'original.midi'))
                 tokenizer(continued_original).dump_midi(str(item_midi_path / 'continued_original.midi'))
+
+                results.append({
+                    'composition_dir': str(item_path),
+                    'prompt_length': prompt.shape[0],
+                    'generated_length': generated.shape[0],
+                    'ended_with_eos': tokenizer['EOS_None'] in list(generated)
+                })
+
+    with open(output_dir / 'results.json', 'w') as fp:
+        json.dump(results, fp, indent=2)
 
 
 def save_tokens(tokens: torch.Tensor, dir: Path, name: str, tokenizer: MIDITokenizer, converter: Converter):

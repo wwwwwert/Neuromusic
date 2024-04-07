@@ -31,12 +31,12 @@ To install all required dependencies and final model run:
 ```
 
 ## Reproduce results
-To run train with _Los Angeles MIDI Dataset_:
+To run train with _Los Angeles MIDI_ dataset:
 ```shell
 python -m train -c scripts/configs/train_config.json
 ```
 
-To run test inference with Logical Access eval dataset:
+To run test inference with _Los Angeles MIDI_ dataset:
 ```
 python test.py \
    -c scripts/configs/test_LAMD.json \
