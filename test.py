@@ -89,7 +89,8 @@ def main(config, out_path):
                     'composition_dir': str(item_path),
                     'prompt_length': prompt.shape[0],
                     'generated_length': generated.shape[0],
-                    'ended_with_eos': tokenizer['EOS_None'] in list(generated)
+                    'ended_with_eos': tokenizer['EOS_None'] in list(generated),
+                    'prompt_original_path': midi_path,
                 })
 
     with open(output_dir / 'results.json', 'w') as fp:
