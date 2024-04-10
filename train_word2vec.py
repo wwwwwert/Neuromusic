@@ -33,9 +33,6 @@ def main(dataset: BaseDataset, model_args, save_path):
                 total=len(dataset)
             ))
     harmony_seqs = [seq for seq in harmony_seqs if seq is not None]
-    
-    with open('saved/kek.json', 'w') as fp:
-        json.dump({'harmony_seqs': harmony_seqs}, fp, indent=2)
 
     model = gensim.models.Word2Vec(
         harmony_seqs, 
