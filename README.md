@@ -4,8 +4,6 @@
 
 This project employs multiple LLM models to generate symbolic music. There is an end-to-end pipeline to train, evaluate and generate music with various models. The pipeline supports extensive logging information with WandB.
 
-Training process report, notebook.
-
 Models:
 - Music Transformer
 - ...
