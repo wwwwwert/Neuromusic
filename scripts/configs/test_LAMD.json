@@ -1,0 +1,20 @@
+{
+  "name": "test_LAMD",
+  "n_gpu": 1,
+  "data": {
+    "test": {
+      "batch_size": 2,
+      "num_workers": 5,
+      "datasets": [
+        {
+          "type": "LAMDataset",
+          "args": {
+            "part": "test",
+            "audio_length": 10,
+            "n_tokens": 2048
+          }
+        }
+      ]
+    }
+  }
+}

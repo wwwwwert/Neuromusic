@@ -1,0 +1,21 @@
+{
+  "dataset":
+    {
+      "type": "LAMDataset",
+      "args": {
+        "part": "test",
+        "audio_length": 10,
+        "n_tokens": 2048,
+        "max_items": 4000,
+        "max_audio_length": 180
+      }
+    },
+  "Word2Vec_args":
+    {
+      "min_count": 2, 
+      "workers": 4, 
+      "vector_size": 100, 
+      "window": 4, 
+      "sample": 1e-3
+    }
+}
