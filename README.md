@@ -36,12 +36,14 @@ To run train with _Los Angeles MIDI_ dataset:
 python -m train -c scripts/configs/train_config.json
 ```
 
-To run test inference with _Los Angeles MIDI_ dataset:
+To run test inference with _Los Angeles MIDI_ dataset with 512 prompt tokens and generate 512 tokens:
 ```
 python test.py \
    -c scripts/configs/test_LAMD.json \
    -r best_model/model_best.pth \
    -o test_results_LAMD \
+   --prompt_length 512 \
+   --continue_length 512 \
    -b 1
 ```
 
@@ -52,6 +54,8 @@ python test.py \
    -c scripts/configs/test_custom.json \
    -r best_model/model_best.pth \
    -o test_results_custom \
+   --prompt_length 512 \
+   --continue_length 512 \
    -b 1 \
    -t custom_dataset/
 ```

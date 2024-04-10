@@ -1,7 +1,9 @@
 import argparse
 import json
 from typing import Union
+
 from scripts.utils import ROOT_PATH
+
 
 def main(results: Union[str, dict]):
     if results in None:
@@ -23,7 +25,15 @@ if __name__ == "__main__":
         "--results",
         default=None,
         type=str,
-        help="results json file path",
+        help="Inference test results json file path",
+    )
+
+    args.add_argument(
+        "-m",
+        "--model",
+        default=None,
+        type=str,
+        help="Word2Vec model path for harmony reduction",
     )
 
     main(args.results)

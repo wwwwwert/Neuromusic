@@ -4,6 +4,7 @@ import os
 from pathlib import Path
 
 import torch
+from miditok.midi_tokenizer import MIDITokenizer
 from tqdm import tqdm
 
 import scripts.model as module_model
@@ -13,12 +14,16 @@ from scripts.trainer import Trainer
 from scripts.utils import ROOT_PATH
 from scripts.utils.object_loading import get_dataloaders
 from scripts.utils.parse_config import ConfigParser
-from miditok.midi_tokenizer import MIDITokenizer
 
 DEFAULT_CHECKPOINT_PATH = ROOT_PATH / "default_test_model" / "checkpoint.pth"
 
 
-def main(config, out_path):
+def main(
+    config, 
+    out_path,
+    prompt_length: int=1024,
+    continue_length: int=1024,
+):
     logger = config.get_logger("test")
 
     # define cpu or gpu if possible
@@ -63,9 +68,9 @@ def main(config, out_path):
                 midi_path = batch['midi_path'][item_idx]
                 sequence_length = batch['sequence_length'][item_idx]
                 
-                prompt = batch['input_ids'][item_idx][:sequence_length // 2].cpu().detach()
-                generated = generator.continue_seq(2048, prompt).cpu().detach()
-                original = batch['input_ids'][item_idx][:sequence_length].cpu().detach()
+                prompt = batch['input_ids'][item_idx][:prompt_length].cpu().detach()
+                generated = generator.continue_seq(continue_length, prompt).cpu().detach()
+                original = batch['input_ids'][item_idx][:prompt_length + continue_length].cpu().detach()
                 continued_original = torch.cat([prompt, generated], dim=-1).cpu().detach()
                 
                 name = Path(midi_path).stem
@@ -86,9 +91,11 @@ def main(config, out_path):
                 tokenizer(continued_original).dump_midi(str(item_midi_path / 'continued_original.midi'))
 
                 results.append({
-                    'composition_dir': str(item_path),
+                    'composition_dir': str(item_path.absolute()),
                     'prompt_length': prompt.shape[0],
                     'generated_length': generated.shape[0],
+                    'original_length': original.shape[0],
+                    'continued_original_length': continued_original.shape[0],
                     'ended_with_eos': tokenizer['EOS_None'] in list(generated),
                     'prompt_original_path': midi_path,
                 })
@@ -155,6 +162,18 @@ if __name__ == "__main__":
         type=int,
         help="Number of workers for test dataloader",
     )
+    args.add_argument(
+        "--prompt_length",
+        default=1024,
+        type=int,
+        help="Number of tokens in prompt",
+    )
+    args.add_argument(
+        "--continue_length",
+        default=1024,
+        type=int,
+        help="Number of tokens to generate",
+    )
 
     args = args.parse_args()
 
@@ -195,5 +214,6 @@ if __name__ == "__main__":
     assert config.config.get("data", {}).get("test", None) is not None
     config["data"]["test"]["batch_size"] = args.batch_size
     config["data"]["test"]["n_jobs"] = args.jobs
-
-    main(config, args.output)
+    for dataset in config["data"]["test"]["datasets"]:
+        dataset["args"]["n_tokens"] = args.prompt_length + args.continue_length
+    main(config, args.output, args.prompt_length, args.continue_length)

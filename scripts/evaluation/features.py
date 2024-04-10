@@ -1,25 +1,39 @@
+import os
+from typing import List
+
+import gensim
+import numpy as np
+from music21 import analysis, chord, roman, stream
 from music21.stream.base import Score as m21_score
-from music21 import analysis, roman, stream, chord
+
 from scripts.base.base_feature import FeatureBase
+
+from .utils import kl_divergence
 
 
 class DurationFeature(FeatureBase):
     def __init__(self) -> None:
         super().__init__('Duration Feature')
 
-    def __call__(self, m21_score: m21_score):
-        return m21_score.duration
+    def __call__(self, score: m21_score):
+        return score.duration.quarterLength
+    
+    def distance(self, value_1, value_2):
+        return value_1 - value_2
 
 
 class KeyFeature(FeatureBase):
     def __init__(self) -> None:
         super().__init__('Key Feature')
 
-    def __call__(self, m21_score: m21_score):
-        return m21_score.analyze('key')
+    def __call__(self, score: m21_score):
+        return score.analyze('key')
+    
+    def distance(self, value_1, value_2):
+        return 0 if value_1 == value_2 else 1
     
 
-class PitchDistributionFeature(FeatureBase):
+class PitchClassDistributionFeature(FeatureBase):
     pitches_range = [
         'C',
         'C#',
@@ -36,44 +50,58 @@ class PitchDistributionFeature(FeatureBase):
     ]
 
     def __init__(self) -> None:
-        super().__init__('Pitch Distribution Feature')
+        super().__init__('Pitch Class Distribution Feature')
     
-    def __call__(self, m21_score: m21_score):
-        pitch_count = analysis.pitchAnalysis.pitchAttributeCount(m21_score, 'name')
+    def __call__(self, score: m21_score):
+        pitch_count = analysis.pitchAnalysis.pitchAttributeCount(score, 'name')
         res = []
         for pitch in self.pitches_range:
             if pitch in pitch_count:
                 res.append(pitch_count[pitch])
             else:
                 res.append(0)
-        return res
+        res = np.array(res)
+        res = res / res.sum()
+        return list(res)
+    
+    def distance(self, value_1, value_2):
+        value_1 = np.array(value_1) + 1e-6
+        value_2 = np.array(value_2) + 1e-6
+        return kl_divergence(value_1, value_2)
     
 
 class RhythmFeature(FeatureBase):
     def __init__(self) -> None:
         super().__init__('Rhythm Feature')
 
-    def __call__(self, m21_score: m21_score):
-        time_signatures = m21_score.getTimeSignatures()
+    def __call__(self, score: m21_score):
+        time_signatures = score.getTimeSignatures()
         rhythms = []
         for ts in time_signatures:
             r = "{0}/{1}".format(ts.beatCount, ts.denominator)
             if not rhythms or rhythms[-1] != r:
                 rhythms.append(r)
         return rhythms
+    
+    def distance(self, value_1, value_2):
+        return 0 if value_1[-1] == value_2[-1] else 1
 
 
 class HarmonicReductionFeature(FeatureBase):
-    def __init__(self, max_notes_per_chord: int=4):
+    def __init__(self, max_notes_per_chord: int=4, model_path: str=None):
+        self.max_notes_per_chord = max_notes_per_chord
+        self.model = None
+        if model_path is not None:
+            self.model = gensim.models.word2vec.Word2Vec.load(model_path)
         super().__init__('Harmonic Reduction Feature')
 
-    def __call__(self, m21_score: m21_score):
+    def __call__(self, score: m21_score):
         ret = []
         temp_midi = stream.Score()
-        temp_midi_chords = m21_score.chordify()
+        temp_midi_chords = score.chordify()
         temp_midi.insert(0, temp_midi_chords)    
         music_key = temp_midi.analyze('key')
-        max_notes_per_chord = 4   
+        max_notes_per_chord = self.max_notes_per_chord
         for m in temp_midi_chords.measures(0, None): # None = get all measures.
             if (type(m) != stream.Measure):
                 continue
@@ -140,3 +168,64 @@ class HarmonicReductionFeature(FeatureBase):
         elif (roman_numeral.isDiminishedSeventh()): 
             ret = ret + "o7"
         return ret
+
+    def distance(self, value_1, value_2):
+        if self.model is None:
+            raise AttributeError('You need to train or add pretrained Word2Vec model.')
+        vec_1 = self.vectorize_harmony(value_1)
+        vec_2 = self.vectorize_harmony(value_2)
+
+        return self.cosine_similarity(vec_1, vec_2)
+
+    @staticmethod
+    def cosine_similarity(vecA, vecB):
+        csim = np.dot(vecA, vecB) / (np.linalg.norm(vecA) * np.linalg.norm(vecB))
+        if np.isnan(np.sum(csim)):
+            return 0
+        return csim
+
+    def vectorize_harmony(self, harmonic_reduction: List[str]):
+        word_vecs = []
+        for word in harmonic_reduction:
+            # if word in self.model.wv.key_to_index:
+            vec = self.model.wv[word]
+            word_vecs.append(vec)
+        return np.mean(word_vecs, axis=0)
+    
+
+class NotesDurationDistributionFeature(FeatureBase):
+    def __init__(self) -> None:
+        super().__init__('Notes Duration Distribution Feature')
+
+    def __call__(self, score: m21_score):
+        notes_lengths_distribution = {}
+        for note in score.flat.notes:
+            note_length = note.quarterLength
+            if note_length not in notes_lengths_distribution:
+                notes_lengths_distribution[note_length] = 0
+            notes_lengths_distribution[note_length] += 1
+        return notes_lengths_distribution
+    
+    def distance(self, value_1, value_2):
+        for k in value_1.keys():
+            if k not in value_2:
+                value_2[k] = 0
+        
+        for k in value_2.keys():
+            if k not in value_1:
+                value_1[k] = 0
+
+        data_1 = []
+        data_2 = []
+
+        for k in value_1.keys():
+            data_1.append(value_1[k])
+            data_2.append(value_2[k])
+
+        data_1 = np.array(data_1, dtype='float32')
+        data_2 = np.array(data_2, dtype='float32')
+
+        data_1 = data_1 / data_1.sum() + 1e-6
+        data_2 = data_2 / data_2.sum() + 1e-6
+
+        return kl_divergence(data_1, data_2)

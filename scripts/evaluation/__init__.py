@@ -1,9 +1,12 @@
-from .features import DurationFeature, KeyFeature, PitchDistributionFeature, RhythmFeature, HarmonicReductionFeature
+from .features import (DurationFeature, HarmonicReductionFeature, KeyFeature,
+                       NotesDurationDistributionFeature,
+                       PitchClassDistributionFeature, RhythmFeature)
 
 __all__ = [
     "DurationFeature", 
     "KeyFeature", 
-    "PitchDistributionFeature", 
+    "PitchClassDistributionFeature", 
     "RhythmFeature", 
-    "HarmonicReductionFeature"
+    "HarmonicReductionFeature",
+    "NotesDurationDistributionFeature"
 ]

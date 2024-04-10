@@ -16,4 +16,4 @@ scikit-learn==1.4.1.post1
 seaborn==0.13.2
 editdistance==0.8.1
 music21==8.3.0
-muspy==0.5.0
+gensim==4.3.2
