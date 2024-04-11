@@ -67,10 +67,11 @@ def main(
             for item_idx in range(batch['input_ids'].shape[0]):
                 midi_path = batch['midi_path'][item_idx]
                 sequence_length = batch['sequence_length'][item_idx]
-                
-                prompt = batch['input_ids'][item_idx][:prompt_length].cpu().detach()
+                item_prompt_length = min(sequence_length, prompt_length)
+
+                prompt = batch['input_ids'][item_idx][:item_prompt_length].cpu().detach()
                 generated = generator.continue_seq(continue_length, prompt).cpu().detach()
-                original = batch['input_ids'][item_idx][:prompt_length + continue_length].cpu().detach()
+                original = batch['input_ids'][item_idx][:item_prompt_length + continue_length].cpu().detach()
                 continued_original = torch.cat([prompt, generated], dim=-1).cpu().detach()
                 
                 name = Path(midi_path).stem

@@ -10,7 +10,8 @@
           "type": "LAMDataset",
           "args": {
             "part": "test",
-            "audio_length": 10,
+            "max_items": 1000,
+            "audio_length": 25,
             "n_tokens": 2048
           }
         }
