@@ -1,10 +1,12 @@
 import argparse
 import json
 import os
+from math import isnan, isinf
 from pathlib import Path
-from typing import Union
 
+import matplotlib.pyplot as plt
 import pandas as pd
+import seaborn as sns
 from scipy import stats
 from tqdm import tqdm
 
@@ -14,11 +16,12 @@ from scripts.evaluation import (HarmonicReductionFeature,
 from scripts.evaluation.utils import open_midi
 from scripts.utils import ROOT_PATH
 
+plt.rcParams['figure.figsize'] = 8, 5
+plt.rcParams['font.size'] = 12
+sns.set_style('dark')
 
-def main(results: dict, word2vec_path: str, output_path: str):
-    # получаем три датафрейма на признаки промпта, сгенерированных, оригинальных
-    # считаем разницы между значениями признаков, получаем по два датафрейма с распределениями разниц
-    # для каждого признака оцениваем статистическую значимость разницы
+
+def main(results: dict, word2vec_path: str, output_path: Path):
     results_data = pd.DataFrame.from_dict(results)
     results_data['prompt_midi_path'] = results_data['composition_dir'].apply(lambda x: str(Path(x) / 'midi' / 'prompt.midi'))
     results_data['generated_midi_path'] = results_data['composition_dir'].apply(lambda x: str(Path(x) / 'midi' / 'generated.midi'))
@@ -51,26 +54,44 @@ def main(results: dict, word2vec_path: str, output_path: str):
         original_m21 = open_midi(row['original_midi_path'], remove_drums=True)
 
         for feature in features:
-            prompt_feature = feature(prompt_m21)
-            generated_feature = feature(generated_m21)
-            original_feature = feature(original_m21)
+            try:
+                prompt_feature = feature(prompt_m21)
+                generated_feature = feature(generated_m21)
+                original_feature = feature(original_m21)
 
-            prompt_to_generated_distances[str(feature)].append(feature.distance(prompt_feature, generated_feature))
-            prompt_to_original_distances[str(feature)].append(feature.distance(prompt_feature, original_feature))
-    
+                dist_to_generated = feature.distance(prompt_feature, generated_feature)
+                dist_to_original = feature.distance(prompt_feature, original_feature)
+
+            except:
+                continue
+
+            if isnan(dist_to_generated) or isnan(dist_to_original):
+                continue
+
+            if isinf(dist_to_generated) or isinf(dist_to_original):
+                continue
+
+            prompt_to_generated_distances[str(feature)].append(dist_to_generated)
+            prompt_to_original_distances[str(feature)].append(dist_to_original)
+
     pvalues = {}
-
-    for feature in features:
+    fig, axs = plt.subplots(1, len(features), figsize=(8 * len(features), 8))
+    for idx, feature in enumerate(features):
         feature_name = str(feature)
         a = prompt_to_generated_distances[feature_name]
         b = prompt_to_original_distances[feature_name]
+        sns.histplot(a, ax=axs[idx], bins=50, label='generated')
+        sns.histplot(b, ax=axs[idx], bins=50, label='original')
+        axs[idx].set_title(str(feature))
         _, pvalue = stats.kstest(a, b)
         pvalues[feature_name] = pvalue
 
-    if os.path.dirname(output_path):
-        os.makedirs(os.path.dirname(output_path), exist_ok=True)
-    with open(output_path, 'w') as fp:
+    os.makedirs(output_path, exist_ok=True)
+    plt.legend()
+    plt.savefig(output_path / 'distances_distributions.png', bbox_inches='tight')
+    with open(output_path / 'pvalues.json', 'w') as fp:
          json.dump(pvalues, fp, indent=2)
+
 
 if __name__ == "__main__":
     args = argparse.ArgumentParser(description="Test results of inference.")
@@ -87,7 +108,7 @@ if __name__ == "__main__":
         "--output",
         default=None,
         type=str,
-        help="Path to save evaluation results json",
+        help="Path to save evaluation results",
     )
 
     args.add_argument(
@@ -103,4 +124,4 @@ if __name__ == "__main__":
     with open(args.results, 'r') as fp:
             results = json.load(fp)
 
-    main(results, args.model, args.output)
+    main(results, args.model, Path(args.output))

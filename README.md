@@ -71,7 +71,7 @@ To evaluate quality of generated compositions the following metrics are proposed
 3. Harmonic Reduction - evaluated harmony reduction sequence
 The eva
 
-The evaluation script calculates the features of the prompt and the continuations of the original and generated compositions. It then calculates the difference between the features of the prompt and the continuations, resulting in two distributions of feature differences. An A/B test is performed on these distributions, and the p-value is stored. The Kolmogorov-Smirnov test is used for this.
+The evaluation script calculates the features of the prompt and the continuations of the original and generated compositions. It then calculates the difference between the features of the prompt and the continuations, resulting in two distributions of feature differences. An A/B test is performed on these distributions, and the p-value is stored. The Kolmogorov-Smirnov test is used for this. Histograms of distances distributions saved as well.
 
 The script considers the KL divergence between the distributions of the first two features. For the third feature, the WordVec model was trained on the harmonic series from the test dataset. Embeddings were then calculated for the harmonic series of the prompt and continuation using the trained model, and cosine similarity was calculated. 
 
@@ -85,8 +85,9 @@ python train_word2vec.py \
 To evaluate the p-values of the proposed features on the generation results of test.py: 
 ```
 python evaluate.py \
-   -r generated/results.json \
-   -m saved/word2vec.model -o evaluation_pvalues.json
+   -r test_results/results.json \
+   -m saved/word2vec.model \
+   -o evaluation_results
 ```
 
 ## Author
