@@ -102,6 +102,10 @@
     {
       "type": "MeanLengthMetric",
       "args": {}
+    },
+    {
+      "type": "PerplexityMetric",
+      "args": {}
     }
   ],
   "gradient_accumulation_steps": 1,

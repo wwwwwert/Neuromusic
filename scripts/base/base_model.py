@@ -11,7 +11,7 @@ class BaseModel(nn.Module):
     Base class for all models
     """
 
-    def __init__(self, n_class, input_length, **batch):
+    def __init__(self, n_class, input_length, **kwargs):
         self.n_class = n_class
         self.input_length = input_length
         super().__init__()

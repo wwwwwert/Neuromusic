@@ -1,6 +1,8 @@
 from editdistance import eval
 from sklearn.metrics import accuracy_score
 from torch import Tensor
+import torch
+from torch.nn import functional as F
 
 
 def calc_ter(target_sequence: Tensor, predicted_sequence: Tensor) -> float:
@@ -18,3 +20,9 @@ def calc_ter(target_sequence: Tensor, predicted_sequence: Tensor) -> float:
 def calc_accuracy_score(target_sequence: Tensor, predicted_sequence: Tensor) -> float:
     """Its better to use accuracy only on train. Use calc_ter to check inference."""
     return accuracy_score(target_sequence, predicted_sequence)
+
+
+def calc_perplexity(target_sequence: Tensor, logits: Tensor) -> float:
+    loss = F.cross_entropy(logits, target_sequence)
+    perplexity = torch.exp(loss)
+    return perplexity

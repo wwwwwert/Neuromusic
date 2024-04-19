@@ -39,8 +39,7 @@ def main(
     model = config.init_obj(
         config["arch"], 
         module_model, 
-        n_class=len(midi_encoder), 
-        pad_id=midi_encoder["PAD_None"]
+        tokenizer=midi_encoder
     )
     logger.info(model)
 
@@ -70,7 +69,8 @@ def main(
                 item_prompt_length = min(sequence_length, prompt_length)
 
                 prompt = batch['input_ids'][item_idx][:item_prompt_length].cpu().detach()
-                generated = generator.continue_seq(continue_length, prompt).cpu().detach()
+                generated, entropy = generator.continue_seq(continue_length, prompt, calc_entropy=True)
+                generated = generated.cpu().detach()
                 original = batch['input_ids'][item_idx][:item_prompt_length + continue_length].cpu().detach()
                 continued_original = torch.cat([prompt, generated], dim=-1).cpu().detach()
                 
@@ -99,10 +99,16 @@ def main(
                     'continued_original_length': continued_original.shape[0],
                     'ended_with_eos': tokenizer['EOS_None'] in list(generated),
                     'prompt_original_path': midi_path,
+                    'entropy': entropy,
                 })
 
     with open(output_dir / 'results.json', 'w') as fp:
         json.dump(results, fp, indent=2)
+
+    print(
+        'Mean entropy:',
+        sum(elem['entropy'] for elem in results) / len(results)
+    )
 
 
 def save_tokens(tokens: torch.Tensor, dir: Path, name: str, tokenizer: MIDITokenizer, converter: Converter):

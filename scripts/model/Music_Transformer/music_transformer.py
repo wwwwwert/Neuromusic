@@ -7,6 +7,8 @@ from scripts.base import BaseModel
 
 from .positional_encoding import PositionalEncoding
 from .rpr import TransformerEncoderLayerRPR, TransformerEncoderRPR
+from miditok.midi_tokenizer import MIDITokenizer
+
 
 
 class MusicTransformer(BaseModel):
@@ -25,9 +27,8 @@ class MusicTransformer(BaseModel):
 
     def __init__(
         self,
-        n_class: int,
+        tokenizer: MIDITokenizer,
         input_length: int,
-        pad_id: int,
         n_layers: int=6,
         num_heads: int=8,
         d_model: int=512,
@@ -53,6 +54,8 @@ class MusicTransformer(BaseModel):
             rpr (bool): A boolean value indicating whether to use Relative
                 Positional Encoding or not.
         """
+        n_class = len(tokenizer)
+        pad_id = tokenizer["PAD_None"]
         super().__init__(n_class, input_length)
 
         self.dummy = DummyDecoder()

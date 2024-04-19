@@ -38,8 +38,7 @@ def main(config):
     model = config.init_obj(
         config["arch"], 
         module_arch, 
-        n_class=len(midi_encoder), 
-        pad_id=midi_encoder["PAD_None"]
+        tokenizer=midi_encoder
     )
     logger.info(model)
 
