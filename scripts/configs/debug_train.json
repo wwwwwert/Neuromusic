@@ -73,7 +73,7 @@
     }
   },
   "tokenizer": {
-    "type": "REMI",
+    "type": "Structured",
     "config_args": {
       "num_velocities": 16, 
       "use_chords": true, 

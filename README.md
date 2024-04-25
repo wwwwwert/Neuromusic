@@ -34,9 +34,9 @@ To install all required dependencies and final model run:
 ```
 
 ## Reproduce results
-To run train with _Los Angeles MIDI_ dataset:
+To run train _Music Transformer_ with _REMI_ tokenizer and _Los Angeles MIDI_ dataset:
 ```shell
-python -m train -c scripts/configs/train_config.json
+python -m train -c scripts/configs/REMI/train_music_tranformer.json
 ```
 
 To run test inference with _Los Angeles MIDI_ dataset with 512 prompt tokens and generate 512 tokens:

@@ -1,5 +1,5 @@
 {
-  "name": "Music_Transformer",
+  "name": "GPT2",
   "n_gpu": 1,
   "augmentations": {
     "midi": [],
@@ -113,7 +113,7 @@
     "early_stop": 100,
     "visualize": "wandb",
     "wandb_project": "diploma",
-    "wandb_run_name": "Music Transformer",
+    "wandb_run_name": "GPT-2",
     "len_epoch": 4000,
     "grad_norm_clip": 0.5
   }
