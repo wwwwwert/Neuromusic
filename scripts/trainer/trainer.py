@@ -12,7 +12,7 @@ from tqdm import tqdm
 from scripts.base import BaseTrainer
 from scripts.converter import Converter
 from scripts.logger.utils import plot_spectrogram_to_buf
-from scripts.metric.utils import calc_ter
+from scripts.metric.utils import calc_accuracy_score
 from scripts.utils import MetricTracker, inf_loop
 
 
@@ -219,16 +219,26 @@ class Trainer(BaseTrainer):
             return
         input_ids = input_ids.cpu().detach().clone()
         target_ids = target_ids.cpu().detach().clone()
-        tuples = list(zip(input_ids, sequence_length))
+        logits = logits.cpu().detach().clone()
+        tuples = list(zip(input_ids, logits, sequence_length, target_ids))
         shuffle(tuples)
         rows = []
-        for tokens, length in tuples[:examples_to_log]:
-            target_audio = self.converter.score_to_tensor(self.midi_encoder(tokens[:length]))
+        for tokens, item_logits, length, target in tuples[:examples_to_log]:
+            tokens = tokens[:length]
+            item_logits = item_logits[:length, :]
+            target = target[:length]
+
+            target_audio = self.converter.score_to_tensor(self.midi_encoder(tokens))
+            pred = item_logits.argmax(dim=-1)
+            accuracy = calc_accuracy_score(target, pred)
+            ce_loss = loss = F.cross_entropy(item_logits, target)
             rows.append([
                 self.writer.wandb.Audio(target_audio, sample_rate=16000),
-                length
+                length,
+                accuracy,
+                ce_loss
             ])
-        table = pd.DataFrame(rows, columns=['target audio', 'sequence length'])
+        table = pd.DataFrame(rows, columns=['audio', 'token count', 'accuracy', 'CE Loss'])
         self.writer.add_table("predictions", table)
 
     def _log_parameters_histogram(self):

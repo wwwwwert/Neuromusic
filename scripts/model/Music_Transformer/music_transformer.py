@@ -1,5 +1,6 @@
 from typing import Optional
 
+from miditok.midi_tokenizer import MIDITokenizer
 from torch import Tensor, nn
 from torch.nn.modules.normalization import LayerNorm
 
@@ -7,8 +8,6 @@ from scripts.base import BaseModel
 
 from .positional_encoding import PositionalEncoding
 from .rpr import TransformerEncoderLayerRPR, TransformerEncoderRPR
-from miditok.midi_tokenizer import MIDITokenizer
-
 
 
 class MusicTransformer(BaseModel):

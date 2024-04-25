@@ -2,12 +2,12 @@ from typing import Dict, Optional
 
 import torch
 from miditok.midi_tokenizer import MIDITokenizer
+from scipy import stats
 from torch import Tensor, device
 from tqdm import tqdm
 
 from scripts.base import BaseModel
 from scripts.trainer import Trainer
-from scipy import stats
 
 
 class Generator:
@@ -73,8 +73,10 @@ class Generator:
 
         return tokens[prompt_seq.shape[0]:token_idx], sum(entropies) / len(entropies)
 
-    def pred_next_token(self, batch: Dict):
-        logits = self.model(**batch)['logits'][:, -1, :]
+    def pred_next_token(self, batch: Dict, top_tokens=-1):
+        logits = self.model(**batch)['logits'][:, -1, :].squeeze()
+        if top_tokens > 0:
+            logits[logits.argsort(descending=True)[top_tokens:]] = 0
         if self.sample:
             distribution = torch.distributions.categorical.Categorical(
                 logits=logits

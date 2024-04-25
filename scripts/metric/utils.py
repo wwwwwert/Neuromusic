@@ -1,7 +1,7 @@
+import torch
 from editdistance import eval
 from sklearn.metrics import accuracy_score
 from torch import Tensor
-import torch
 from torch.nn import functional as F
 
 

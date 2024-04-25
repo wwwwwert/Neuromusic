@@ -1,6 +1,7 @@
 import argparse
 import json
 import os
+import time
 from pathlib import Path
 
 import torch
@@ -69,7 +70,9 @@ def main(
                 item_prompt_length = min(sequence_length, prompt_length)
 
                 prompt = batch['input_ids'][item_idx][:item_prompt_length].cpu().detach()
+                start_time = time.time()
                 generated, entropy = generator.continue_seq(continue_length, prompt, calc_entropy=True)
+                generation_time = time.time() - start_time
                 generated = generated.cpu().detach()
                 original = batch['input_ids'][item_idx][:item_prompt_length + continue_length].cpu().detach()
                 continued_original = torch.cat([prompt, generated], dim=-1).cpu().detach()
@@ -100,6 +103,7 @@ def main(
                     'ended_with_eos': tokenizer['EOS_None'] in list(generated),
                     'prompt_original_path': midi_path,
                     'entropy': entropy,
+                    'generation_time': generation_time
                 })
 
     with open(output_dir / 'results.json', 'w') as fp:
@@ -108,6 +112,10 @@ def main(
     print(
         'Mean entropy:',
         sum(elem['entropy'] for elem in results) / len(results)
+    )
+    print(
+        'Mean generation time:',
+        sum(elem['generation_time'] for elem in results) / len(results)
     )
 
 

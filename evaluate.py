@@ -1,7 +1,7 @@
 import argparse
 import json
 import os
-from math import isnan, isinf
+from math import isinf, isnan
 from pathlib import Path
 
 import matplotlib.pyplot as plt
