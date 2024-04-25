@@ -1,0 +1,120 @@
+{
+  "name": "Music_Transformer",
+  "n_gpu": 1,
+  "augmentations": {
+    "midi": [],
+    "tokens": []
+  },
+  "arch": {
+    "type": "GPT2",
+    "args": {
+      "input_length": 1024,
+      "n_layers": 12,
+      "num_heads": 12,
+      "d_model": 768,
+      "dim_feedforward": 1536
+    }
+  },
+  "data": {
+    "train": {
+      "batch_size": 3,
+      "num_workers": 5,
+      "datasets": [
+        {
+          "type": "LAMDataset",
+          "args": {
+            "part": "train",
+            "audio_length": 180,
+            "n_tokens": 1024
+          }
+        }
+      ]
+    },
+    "val": {
+      "batch_size": 3,
+      "num_workers": 5,
+      "datasets": [
+        {
+          "type": "LAMDataset",
+          "args": {
+            "part": "validation",
+            "audio_length": 180,
+            "n_tokens": 1024,
+            "max_items": 400
+          }
+        }
+      ]
+    },
+    "test": {
+      "batch_size": 3,
+      "num_workers": 5,
+      "datasets": [
+        {
+          "type": "LAMDataset",
+          "args": {
+            "part": "test",
+            "audio_length": 180,
+            "n_tokens": 1024,
+            "max_items": 400
+          }
+        }
+      ]
+    }
+  },
+  "tokenizer": {
+    "type": "REMI",
+    "config_args": {
+      "num_velocities": 16, 
+      "use_chords": true, 
+      "use_programs": true, 
+      "remove_duplicated_notes": true, 
+      "delete_equal_successive_tempo_changes": true,
+      "delete_equal_successive_time_sig_changes": true
+    },
+    "args": {}
+  },
+  "optimizer": {
+    "type": "Adam",
+    "args": {
+      "lr": 3e-4
+    }
+  },
+  "loss": {
+    "type": "CELoss",
+    "args": {}
+  },
+  "metrics": [
+    {
+      "type": "ArgmaxAccuracyMetric",
+      "args": {}
+    },
+    {
+      "type": "MeanLengthMetric",
+      "args": {}
+    }
+  ],
+  "gradient_accumulation_steps": 10,
+  "lr_scheduler": {
+    "type": "OneCycleLR",
+    "args": {
+      "steps_per_epoch": 4000,
+      "epochs": 20,
+      "anneal_strategy": "cos",
+      "max_lr": 3e-4,
+      "pct_start": 0.2
+    }
+  },
+  "trainer": {
+    "epochs": 20,
+    "save_dir": "saved/",
+    "save_period": 1,
+    "verbosity": 2,
+    "monitor": "min val_loss",
+    "early_stop": 100,
+    "visualize": "wandb",
+    "wandb_project": "diploma",
+    "wandb_run_name": "Music Transformer",
+    "len_epoch": 4000,
+    "grad_norm_clip": 0.5
+  }
+}

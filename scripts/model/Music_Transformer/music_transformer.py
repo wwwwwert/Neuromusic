@@ -30,7 +30,7 @@ class MusicTransformer(BaseModel):
         input_length: int,
         n_layers: int=6,
         num_heads: int=8,
-        d_model: int=512,
+        d_model: int=768,
         dim_feedforward: int=1024,
         dropout: float=0.1,
         rpr: bool=True,
@@ -116,7 +116,6 @@ class MusicTransformer(BaseModel):
     def forward(
         self,
         input_ids: Tensor,
-        padding_mask: bool = True,
         **batch
     ) -> Tensor:
         """Takes an input sequence and outputs predictions via seq2seq method.
@@ -144,8 +143,7 @@ class MusicTransformer(BaseModel):
 
         # Since there are no true decoder layers, the tgt is unused
         # Pytorch wants src and tgt to have some equal dims however
-        padding_mask = (padding_mask != 1)
-        x_out = self.transformer(src=x, tgt=x, src_mask=mask) #, src_key_padding_mask=padding_mask)
+        x_out = self.transformer(src=x, tgt=x, src_mask=mask)
         # masking somehow breaks gradients (nans in gradients)
 
         # Back to (batch_size, max_seq, d_model)
