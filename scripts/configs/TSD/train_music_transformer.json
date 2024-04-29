@@ -1,18 +1,20 @@
 {
-  "name": "GPT2",
+  "name": "Music_Transformer",
   "n_gpu": 1,
   "augmentations": {
     "midi": [],
     "tokens": []
   },
   "arch": {
-    "type": "GPT2",
+    "type": "MusicTransformer",
     "args": {
       "input_length": 1024,
       "n_layers": 12,
       "num_heads": 12,
       "d_model": 768,
-      "dim_feedforward": 1536
+      "dim_feedforward": 1536,
+      "rpr": true,
+      "dropout": 0.1
     }
   },
   "data": {
@@ -62,7 +64,7 @@
     }
   },
   "tokenizer": {
-    "type": "REMI",
+    "type": "TSD",
     "config_args": {
       "num_velocities": 16, 
       "use_chords": true, 
@@ -113,7 +115,7 @@
     "early_stop": 100,
     "visualize": "wandb",
     "wandb_project": "diploma",
-    "wandb_run_name": "GPT-2, REMI",
+    "wandb_run_name": "Music Transformer, TSD",
     "len_epoch": 4000,
     "grad_norm_clip": 0.5
   }

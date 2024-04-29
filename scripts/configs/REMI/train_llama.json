@@ -1,18 +1,18 @@
 {
-  "name": "GPT2",
+  "name": "Llama",
   "n_gpu": 1,
   "augmentations": {
     "midi": [],
     "tokens": []
   },
   "arch": {
-    "type": "GPT2",
+    "type": "Llama",
     "args": {
       "input_length": 1024,
       "n_layers": 12,
-      "num_heads": 12,
-      "d_model": 768,
-      "dim_feedforward": 1536
+      "num_heads": 16,
+      "d_model": 1024,
+      "dim_feedforward": 4096
     }
   },
   "data": {
@@ -113,7 +113,7 @@
     "early_stop": 100,
     "visualize": "wandb",
     "wandb_project": "diploma",
-    "wandb_run_name": "GPT-2, REMI",
+    "wandb_run_name": "Llama, REMI",
     "len_epoch": 4000,
     "grad_norm_clip": 0.5
   }

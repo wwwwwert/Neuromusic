@@ -62,7 +62,7 @@
     }
   },
   "tokenizer": {
-    "type": "REMI",
+    "type": "Structured",
     "config_args": {
       "num_velocities": 16, 
       "use_chords": true, 
@@ -113,7 +113,7 @@
     "early_stop": 100,
     "visualize": "wandb",
     "wandb_project": "diploma",
-    "wandb_run_name": "GPT-2, REMI",
+    "wandb_run_name": "GPT-2, Structured",
     "len_epoch": 4000,
     "grad_norm_clip": 0.5
   }
