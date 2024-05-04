@@ -5,9 +5,11 @@ from math import isinf, isnan
 from pathlib import Path
 
 import matplotlib.pyplot as plt
+import numpy as np
 import pandas as pd
 import seaborn as sns
 from scipy import stats
+from scipy.stats import entropy
 from tqdm import tqdm
 
 from scripts.evaluation import (HarmonicReductionFeature,
@@ -15,8 +17,6 @@ from scripts.evaluation import (HarmonicReductionFeature,
                                 PitchClassDistributionFeature)
 from scripts.evaluation.utils import open_midi
 from scripts.utils import ROOT_PATH
-from scipy.stats import entropy
-import numpy as np
 
 plt.rcParams['figure.figsize'] = 8, 5
 plt.rcParams['font.size'] = 12

@@ -5,8 +5,18 @@ sudo gem install yadisk
 pip install -r requirements.txt
 
 # Load pretrained models
-yadisk https://disk.yandex.ru/d/BV-vu0swn8JiMw
-unzip best_model.zip
+yadisk https://disk.yandex.ru/d/6Q4qPGnUyCcvxg
+unzip models.zip
+cd models/
 
-yadisk https://disk.yandex.ru/d/721RFMg9um9xOg
-unzip saved.zip
+cd REMI
+unzip \*.zip
+cd ..
+
+cd Structures
+unzip \*.zip
+cd ..
+
+cd TSD
+unzip \*.zip
+cd ..

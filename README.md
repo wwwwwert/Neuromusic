@@ -5,12 +5,14 @@
 This project employs multiple LLM models to generate symbolic music. There is an end-to-end pipeline to train, evaluate and generate music with various models. The pipeline supports extensive logging information with WandB.
 
 Models:
+- Llama
 - Music Transformer
-- ...
+- GPT-2
 
 Tokenisers:
 - REMI
-- ...
+- TSD
+- Structured
 
 Datasets:
 - Maestro Dataset 2.0.0
@@ -19,10 +21,12 @@ Datasets:
 
 ## Project structure
 - **/scripts** - project scripts
+- _evaluate.py_ - script to run generated compositions evaluation
 - _install_dependencies.sh_ - script for dependencies installation
 - _requirements.txt_ - Python requirements list
-- _train.py_ - script to run train
 - _test.py_ - script to run test
+- _train.py_ - script to run train
+- _train_word2vec.py_ - script to train Word2Vec model for further use in evaluation
 
 ## Installation guide
 
@@ -47,8 +51,11 @@ python test.py \
    -o test_results_LAMD \
    --prompt_length 512 \
    --continue_length 512 \
+   --save_audio \ 
    -b 1
 ```
+
+You can specify the number of elements in dataset by changing parameter _max_items_ in _test_LAMD.json_.
 
 To test model on a custom dataset you need to put MIDI files in some directory.
 To run test with custom dataset in _custom_dataset_ directory:
@@ -71,7 +78,7 @@ To evaluate quality of generated compositions the following metrics are proposed
 3. Harmonic Reduction - evaluated harmony reduction sequence
 The eva
 
-The evaluation script calculates the features of the prompt and the continuations of the original and generated compositions. It then calculates the difference between the features of the prompt and the continuations, resulting in two distributions of feature differences. An A/B test is performed on these distributions, and the p-value is stored. The Kolmogorov-Smirnov test is used for this. Histograms of distances distributions saved as well.
+The evaluation script calculates the features of the prompt and the continuations of the original and generated compositions. It then calculates the difference between the features of the prompt and the continuations, resulting in two distributions of feature differences. The Kullback-Leibler divergence is employed to analyse these distributions. Histograms of distances distributions saved as well.
 
 The script considers the KL divergence between the distributions of the first two features. For the third feature, the WordVec model was trained on the harmonic series from the test dataset. Embeddings were then calculated for the harmonic series of the prompt and continuation using the trained model, and cosine similarity was calculated. 
 
@@ -79,14 +86,14 @@ To train Word2Vec for harmony reduction with _Los Angeles MIDI_ dataset:
 ```
 python train_word2vec.py \
    -c scripts/configs/train_word2vec.json \
-   -o saved/word2vec.model
+   -o models/word2vec.model
 ```
 
 To evaluate the p-values of the proposed features on the generation results of test.py: 
 ```
 python evaluate.py \
    -r test_results/results.json \
-   -m saved/word2vec.model \
+   -m models/word2vec.model \
    -o evaluation_results
 ```
 
