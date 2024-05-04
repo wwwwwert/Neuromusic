@@ -24,6 +24,7 @@ def main(
     out_path,
     prompt_length: int=1024,
     continue_length: int=1024,
+    save_audio: bool=False
 ):
     logger = config.get_logger("test")
 
@@ -84,10 +85,11 @@ def main(
                 os.makedirs(item_audio_path, exist_ok=True)
                 os.makedirs(item_midi_path, exist_ok=True)
                 
-                converter.score_to_audio(tokenizer(prompt), str(item_audio_path / 'prompt.wav'))
-                converter.score_to_audio(tokenizer(generated), str(item_audio_path / 'generated.wav'))
-                converter.score_to_audio(tokenizer(original), str(item_audio_path / 'original.wav'))
-                converter.score_to_audio(tokenizer(continued_original), str(item_audio_path / 'continued_original.wav'))
+                if save_audio:
+                    converter.score_to_audio(tokenizer(prompt), str(item_audio_path / 'prompt.wav'))
+                    converter.score_to_audio(tokenizer(generated), str(item_audio_path / 'generated.wav'))
+                    converter.score_to_audio(tokenizer(original), str(item_audio_path / 'original.wav'))
+                    converter.score_to_audio(tokenizer(continued_original), str(item_audio_path / 'continued_original.wav'))
 
                 tokenizer(prompt).dump_midi(str(item_midi_path / 'prompt.midi'))
                 tokenizer(generated).dump_midi(str(item_midi_path / 'generated.midi'))
@@ -117,13 +119,6 @@ def main(
         'Mean generation time:',
         sum(elem['generation_time'] for elem in results) / len(results)
     )
-
-
-def save_tokens(tokens: torch.Tensor, dir: Path, name: str, tokenizer: MIDITokenizer, converter: Converter):
-    score = tokenizer(tokens)
-    midi_path = dir / 'midi' / 'name.midi'
-    converter.score_to_audio()
-
 
 
 if __name__ == "__main__":
@@ -190,6 +185,12 @@ if __name__ == "__main__":
         help="Number of tokens to generate",
     )
 
+    args.add_argument(
+        '--save_audio', 
+        action=argparse.BooleanOptionalAction,
+        help="Bool whether to save mp3 files additionally.",
+    )
+
     args = args.parse_args()
 
     # set GPUs
@@ -231,4 +232,4 @@ if __name__ == "__main__":
     config["data"]["test"]["n_jobs"] = args.jobs
     for dataset in config["data"]["test"]["datasets"]:
         dataset["args"]["n_tokens"] = args.prompt_length + args.continue_length
-    main(config, args.output, args.prompt_length, args.continue_length)
+    main(config, args.output, args.prompt_length, args.continue_length, args.save_audio)
