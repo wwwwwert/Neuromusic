@@ -2,7 +2,9 @@
 
 ## Project description
 
-This project employs multiple LLM models to generate symbolic music. There is an end-to-end pipeline to train, evaluate and generate music with various models. The pipeline supports extensive logging information with WandB.
+This project employs multiple LLM models to generate symbolic music. There is an end-to-end pipeline to train, evaluate and generate music with various models. The pipeline supports extensive logging information with WandB. 
+
+[WandB Report](https://wandb.ai/dauspenskiy_hse/diploma/reports/Neuromusic-Thesis---Vmlldzo3OTAyMDc1?accessToken=5u8lf27ayhbao9f0sh92aaok9x16k75pmrd59p9x6pu5rsii8tqhe1ldvirrjbyf) on training.
 
 Models:
 - Llama
