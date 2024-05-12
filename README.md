@@ -19,12 +19,14 @@ Tokenisers:
 Datasets:
 - Maestro Dataset 2.0.0
 - Los Angeles MIDI Dataset 3.1
-- ...
+- Custom datasets
+
+The framework allows you to seamlessly integrate your own custom models, tokenizers, and datasets, providing you with greater flexibility and control over your project.
 
 ## Project structure
 - **/scripts** - project scripts
 - _evaluate.py_ - script to run generated compositions evaluation
-- _install_dependencies.sh_ - script for dependencies installation
+- _install_dependencies.sh_ - script for dependencies installation and pre-trained models loading
 - _requirements.txt_ - Python requirements list
 - _test.py_ - script to run test
 - _train.py_ - script to run train
@@ -32,9 +34,9 @@ Datasets:
 
 ## Installation guide
 
-It is strongly recommended to use new virtual environment for this project. Project was developed with Python3.9 and Ubuntu 22.04.2 LTS.
+It is strongly recommended to use new virtual environment for this project. Project was developed with Python3.9, Ubuntu 22.04.2 LTS and CUDA 11.8.
 
-To install all required dependencies and final model run:
+To install all required dependencies and load pre-trained models run:
 ```shell
 ./install_dependencies.sh
 ```
@@ -78,11 +80,10 @@ To evaluate quality of generated compositions the following metrics are proposed
 1. Pitch Class Distribution - distribution of used notes pitches
 2. Notes Duration Distribution - distribution of duration of used notes
 3. Harmonic Reduction - evaluated harmony reduction sequence
-The eva
 
-The evaluation script calculates the features of the prompt and the continuations of the original and generated compositions. It then calculates the difference between the features of the prompt and the continuations, resulting in two distributions of feature differences. The Kullback-Leibler divergence is employed to analyse these distributions. Histograms of distances distributions saved as well.
+The evaluation script calculates the features of the prompt and the continuations of the original and generated compositions. It then calculates the difference between the features of the prompt and the continuations, resulting in two distributions of feature differences. The Kullback-Leibler divergence is employed to analyze these distributions. Histograms of distances distributions saved as well.
 
-The script considers the KL divergence between the distributions of the first two features. For the third feature, the WordVec model was trained on the harmonic series from the test dataset. Embeddings were then calculated for the harmonic series of the prompt and continuation using the trained model, and cosine similarity was calculated. 
+The script considers the KL divergence between the distributions of the first two features. For the third feature, the Word2Vec model was trained on the harmonic series from the test dataset. Embeddings were then calculated for the harmonic series of the prompt and continuation using the trained model, and cosine similarity was calculated. 
 
 To train Word2Vec for harmony reduction with _Los Angeles MIDI_ dataset:
 ```
@@ -91,7 +92,7 @@ python train_word2vec.py \
    -o models/word2vec.model
 ```
 
-To evaluate the p-values of the proposed features on the generation results of test.py: 
+To evaluate the KL divergence of the proposed features from results of test.py: 
 ```
 python evaluate.py \
    -r test_results/results.json \
