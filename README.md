@@ -102,3 +102,4 @@ python evaluate.py \
 
 ## Author
 Dmitrii Uspenskii HSE AMI 4th year.
+dauspenskiy@edu.hse.ru
