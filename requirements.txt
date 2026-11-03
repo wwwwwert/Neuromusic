@@ -12,7 +12,7 @@ tqdm~=4.66.3
 wandb~=0.16.4
 
 notebook~=6.4.12
-gitpython~=3.1.42
+gitpython
 miditok~=3.0.0
 pypianoroll~=1.0.4
 
